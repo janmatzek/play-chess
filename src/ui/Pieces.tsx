@@ -13,6 +13,7 @@ import WhitePawn from "../assets/pieces/Chess_plt45.svg";
 
 import type { PieceType, Color, Piece } from "../types";
 
+// TODO: chec the type, this looks fishy
 export const PIECE_MAP: Record<Color, Record<PieceType, string>> = {
   black: {
     king: BlackKing,
