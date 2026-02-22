@@ -32,8 +32,16 @@ export const PIECE_MAP: Record<Color, Record<PieceType, string>> = {
   },
 } as const;
 
-export function PieceComponent({ piece }: { piece: Piece }) {
+export function PieceComponent({
+  piece,
+  isSelected,
+}: {
+  piece: Piece;
+  isSelected: boolean;
+}) {
   const pathToAsset = PIECE_MAP[piece.color][piece.type];
   const altText = `${piece.color} ${piece.type}`;
-  return <img src={pathToAsset} alt={altText} className="w-full h-full" />;
+  const pieceCss = `w-full h-full ${isSelected && "mb-3 drop-shadow-xl/50"}`;
+
+  return <img src={pathToAsset} alt={altText} className={pieceCss} />;
 }

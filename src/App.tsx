@@ -1,19 +1,19 @@
 import { BoardComponent } from "./ui/Board";
-import { initBoard as initializeBoard } from "./game/game";
+import { initializeBoard } from "./game/initializeBoard";
 import { useState } from "react";
-import type { Piece } from "./types";
+import type { Square } from "./types";
 
 function App() {
   const [board, setBoard] = useState(initializeBoard());
-  const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null);
+  const [selectedSqaure, setSelectedSquare] = useState<Square | null>(null);
   return (
     <>
       <div className="w-screen h-screen bg-gray-800 flex justify-center items-center">
         <div>
           <BoardComponent
             board={board}
-            selectedPiece={selectedPiece}
-            setSelectedPiece={setSelectedPiece}
+            selectedSquare={selectedSqaure}
+            setSelectedSquare={setSelectedSquare}
           ></BoardComponent>
         </div>
       </div>
