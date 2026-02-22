@@ -3,9 +3,24 @@ import type { Board, Square, PieceType } from "../types";
 type LegalMoves = string[];
 type getMovesFunction = (board: Board, selectedSquare: Square) => LegalMoves;
 
-const BOARD_RANGE = [...Array(8).keys()];
-
 // TODO: piece collisions
+
+function isInsideBoard(row: number, col: number): boolean {
+  if (row < 0) {
+    return false;
+  }
+  if (row > 7) {
+    return false;
+  }
+  if (col < 0) {
+    return false;
+  }
+  if (col > 7) {
+    return false;
+  }
+
+  return true;
+}
 
 function getPawnMoves(board: Board, selectedSquare: Square): LegalMoves {
   // TODO: en passant
@@ -41,19 +56,25 @@ function getRookMoves(board: Board, selectedSquare: Square): LegalMoves {
 
   const currentPosition = selectedSquare.position;
 
-  for (let i = 0; i < 8; i++) {
-    // add all squares in current column
-    if (i !== currentPosition.rowNum) {
-      legalIds.push(`${i}-${currentPosition.colNum}`);
-    }
-
-    // add all fields in current row
-    if (i !== currentPosition.colNum) {
-      legalIds.push(`${currentPosition.rowNum}-${i}`);
-    }
-  }
-
   // Rook moves in line - row or column
+  const directions = [
+    { row: 0, col: -1 },
+    { row: 0, col: 1 },
+    { row: 1, col: 0 },
+    { row: -1, col: 0 },
+  ];
+
+  directions.forEach((direction) => {
+    for (let i = 1; i < 8; i++) {
+      const nextRow = currentPosition.rowNum + i * direction.row;
+      const nextCol = currentPosition.colNum + i * direction.col;
+
+      if (isInsideBoard(nextRow, nextCol)) {
+        legalIds.push(`${nextRow}-${nextCol}`);
+      } else break;
+    }
+  });
+
   return legalIds;
 }
 
@@ -65,7 +86,7 @@ function getKnighMoves(board: Board, selectedSquare: Square): LegalMoves {
   const currentPosition = selectedSquare.position;
 
   //   Horsie does the `L`s
-  const movePattern = [
+  const direcation = [
     { row: 2, col: -1 },
     { row: 2, col: 1 },
     { row: -2, col: -1 },
@@ -76,15 +97,12 @@ function getKnighMoves(board: Board, selectedSquare: Square): LegalMoves {
     { row: -1, col: -2 },
   ];
 
-  const legalIds = movePattern
+  const legalIds = direcation
     .map((pattern) => {
-      const landingRow = currentPosition.rowNum + pattern.row;
-      const landingCol = currentPosition.colNum + pattern.col;
-      if (
-        BOARD_RANGE.includes(landingRow) &&
-        BOARD_RANGE.includes(landingCol)
-      ) {
-        return `${currentPosition.rowNum + pattern.row}-${currentPosition.colNum + pattern.col}`;
+      const nextRow = currentPosition.rowNum + pattern.row;
+      const nextCol = currentPosition.colNum + pattern.col;
+      if (isInsideBoard(nextRow, nextCol)) {
+        return `${nextRow}-${nextCol}`;
       }
     })
     .filter((val) => {
@@ -114,7 +132,7 @@ function getBishopMoves(board: Board, selectedSquare: Square): LegalMoves {
     for (let i = 1; i < 8; i++) {
       const nextRow = currentPosition.rowNum + i * direction.row;
       const nextCol = currentPosition.colNum + i * direction.col;
-      if (!BOARD_RANGE.includes(nextRow) || !BOARD_RANGE.includes(nextCol)) {
+      if (!isInsideBoard(nextRow, nextCol)) {
         break;
       }
       legalIds.push(`${nextRow}-${nextCol}`);
@@ -147,7 +165,7 @@ function getKingMoves(board: Board, selectedSquare: Square): LegalMoves {
   directions.forEach((direction) => {
     const nextRow = currentPosition.rowNum + direction.row;
     const nextCol = currentPosition.colNum + direction.col;
-    if (BOARD_RANGE.includes(nextRow) && BOARD_RANGE.includes(nextCol)) {
+    if (isInsideBoard(nextRow, nextCol)) {
       legalIds.push(`${nextRow}-${nextCol}`);
     }
   });
