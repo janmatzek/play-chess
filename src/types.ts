@@ -9,8 +9,8 @@ export type PieceType =
   | "king";
 
 export type Position = {
-  rowNum: number;
-  colNum: number;
+  row: number;
+  col: number;
 };
 
 export type Piece = {

@@ -1,10 +1,10 @@
 import { BoardComponent } from "./ui/Board";
-import { initializeBoard } from "./game/initializeBoard";
+import { initializeBoard, randomizedBoard } from "./game/initializeBoard";
 import { useState } from "react";
 import type { Square } from "./types";
 
 function App() {
-  const [board, setBoard] = useState(initializeBoard());
+  const [board, setBoard] = useState(randomizedBoard());
   const [selectedSqaure, setSelectedSquare] = useState<Square | null>(null);
   return (
     <>

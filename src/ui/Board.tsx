@@ -18,15 +18,13 @@ export function BoardComponent(props: BoardProps) {
       <div className="grid grid-cols-8 w-fit">
         {[...props.board].reverse().map((row, rowIndex) =>
           row.map((square, colIndex) => {
-            const squareId = `${square.position.rowNum}-${square.position.colNum}`;
+            const squareId = `${square.position.row}-${square.position.col}`;
             return (
               <SquareComponent
                 square={square}
                 isSelected={
-                  props.selectedSquare?.position.rowNum ===
-                    square.position.rowNum &&
-                  props.selectedSquare?.position.colNum ===
-                    square.position.colNum
+                  props.selectedSquare?.position.row === square.position.row &&
+                  props.selectedSquare?.position.col === square.position.col
                 }
                 isLegal={legalMoves.includes(squareId)}
                 setSelectedSquare={props.setSelectedSquare}

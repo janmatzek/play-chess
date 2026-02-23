@@ -30,7 +30,7 @@ function getColor(rowNum: number, colNum: number): Color {
 }
 
 function getPiece(rowNum: number, colNum: number): Piece | null {
-  let piece: Piece | null;
+  let piece: Piece | null = null;
   switch (rowNum) {
     case 0:
       piece = {
@@ -75,8 +75,34 @@ export function initializeBoard(): Board {
         color: color,
         piece: piece,
         position: {
-          rowNum: row,
-          colNum: col,
+          row: row,
+          col: col,
+        },
+      };
+      currentRow.push(square);
+    }
+    board.push(currentRow);
+  }
+  return board;
+}
+
+export function randomizedBoard(): Board {
+  const board: Board = [];
+
+  for (let row = 0; row < 8; row++) {
+    const currentRow: Square[] = [];
+    for (let col = 0; col < 8; col++) {
+      const color = getColor(row, col);
+      const randRow = Math.round(Math.random() * 7);
+      const randCol = Math.round(Math.random() * 7);
+      const piece = getPiece(randRow, randCol);
+
+      const square: Square = {
+        color: color,
+        piece: piece,
+        position: {
+          row: row,
+          col: col,
         },
       };
       currentRow.push(square);

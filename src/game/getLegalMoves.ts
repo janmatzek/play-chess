@@ -1,25 +1,47 @@
-import type { Board, Square, PieceType } from "../types";
+import type { Piece, Board, Square, PieceType, Position } from "../types";
 
 type LegalMoves = string[];
 type getMovesFunction = (board: Board, selectedSquare: Square) => LegalMoves;
 
 // TODO: piece collisions
 
-function isInsideBoard(row: number, col: number): boolean {
-  if (row < 0) {
+function isInsideBoard(position: Position): boolean {
+  if (position.row < 0) {
     return false;
   }
-  if (row > 7) {
+  if (position.row > 7) {
     return false;
   }
-  if (col < 0) {
+  if (position.col < 0) {
     return false;
   }
-  if (col > 7) {
+  if (position.col > 7) {
     return false;
   }
 
   return true;
+}
+
+function positionToString(position: Position) {
+  return `${position.row}-${position.col}`;
+}
+
+function hasPiece(board: Board, position: Position): boolean {
+  if (!isInsideBoard(position)) {
+    throw new Error("`hasPiece` evalulated position must be inside the board");
+  }
+  const square = board[position.row][position.col];
+  if (square.piece) {
+    return true;
+  }
+  return false;
+}
+
+function getPiece(board: Board, position: Position): Piece | null {
+  if (!isInsideBoard(position)) {
+    throw new Error("`getPiece` evalulated position must be inside the board");
+  }
+  return board[position.row][position.col].piece;
 }
 
 function getPawnMoves(board: Board, selectedSquare: Square): LegalMoves {
@@ -36,17 +58,51 @@ function getPawnMoves(board: Board, selectedSquare: Square): LegalMoves {
   // Pawn can move 1 square forward
   // Meaning of 'forward' is dependent on color
   const step = selectedSquare.piece.color === "white" ? 1 : -1;
-  const nextSquare = `${currentPosition.rowNum + step}-${currentPosition.colNum}`;
-  legalIds.push(nextSquare);
+  const nextStepPosition = {
+    row: currentPosition.row + step,
+    col: currentPosition.col,
+  };
+  if (isInsideBoard(nextStepPosition) && !hasPiece(board, nextStepPosition)) {
+    legalIds.push(positionToString(nextStepPosition));
+  }
 
   // Pawn's first move can be two squares
   const baseRow = selectedSquare.piece.color === "white" ? 1 : 6;
-  if (selectedSquare.position.rowNum === baseRow) {
-    const jumpSquare = `${currentPosition.rowNum + 2 * step}-${currentPosition.colNum}`;
-    legalIds.push(jumpSquare);
+  if (selectedSquare.position.row === baseRow) {
+    const jumpPosition = {
+      row: currentPosition.row + 2 * step,
+      col: currentPosition.col,
+    };
+    if (!hasPiece(board, nextStepPosition) && !hasPiece(board, jumpPosition)) {
+      legalIds.push(positionToString(jumpPosition));
+    }
   }
+
+  // Check front diagonals for pieces of oponent's color
+  const pawnColor = selectedSquare.piece.color;
+  const diagonalDirections = [
+    { row: 0, col: -1 },
+    { row: 0, col: 1 },
+  ];
+  diagonalDirections.forEach((direction) => {
+    const daigonalPosition = {
+      row: nextStepPosition.row,
+      col: nextStepPosition.col + direction.col,
+    };
+    if (!isInsideBoard(daigonalPosition)) return;
+
+    const diagonalPiece =
+      board[daigonalPosition.row][daigonalPosition.col].piece;
+
+    if (!diagonalPiece) return;
+    if (diagonalPiece.color === pawnColor) return;
+
+    legalIds.push(positionToString(daigonalPosition));
+  });
+
   return legalIds;
 }
+
 function getRookMoves(board: Board, selectedSquare: Square): LegalMoves {
   if (!selectedSquare.piece) {
     return [];
@@ -66,11 +122,20 @@ function getRookMoves(board: Board, selectedSquare: Square): LegalMoves {
 
   directions.forEach((direction) => {
     for (let i = 1; i < 8; i++) {
-      const nextRow = currentPosition.rowNum + i * direction.row;
-      const nextCol = currentPosition.colNum + i * direction.col;
+      const nextPosition = {
+        row: currentPosition.row + i * direction.row,
+        col: currentPosition.col + i * direction.col,
+      };
 
-      if (isInsideBoard(nextRow, nextCol)) {
-        legalIds.push(`${nextRow}-${nextCol}`);
+      if (isInsideBoard(nextPosition)) {
+        const piece = getPiece(board, nextPosition);
+        if (piece) {
+          if (piece.color !== selectedSquare.piece?.color) {
+            legalIds.push(positionToString(nextPosition));
+          }
+          break;
+        }
+        legalIds.push(positionToString(nextPosition));
       } else break;
     }
   });
@@ -99,10 +164,12 @@ function getKnighMoves(board: Board, selectedSquare: Square): LegalMoves {
 
   const legalIds = direcation
     .map((pattern) => {
-      const nextRow = currentPosition.rowNum + pattern.row;
-      const nextCol = currentPosition.colNum + pattern.col;
-      if (isInsideBoard(nextRow, nextCol)) {
-        return `${nextRow}-${nextCol}`;
+      const nextPosition = {
+        row: currentPosition.row + pattern.row,
+        col: currentPosition.col + pattern.col,
+      };
+      if (isInsideBoard(nextPosition)) {
+        return positionToString(nextPosition);
       }
     })
     .filter((val) => {
@@ -130,12 +197,14 @@ function getBishopMoves(board: Board, selectedSquare: Square): LegalMoves {
 
   directions.forEach((direction) => {
     for (let i = 1; i < 8; i++) {
-      const nextRow = currentPosition.rowNum + i * direction.row;
-      const nextCol = currentPosition.colNum + i * direction.col;
-      if (!isInsideBoard(nextRow, nextCol)) {
+      const nextPosition = {
+        row: currentPosition.row + i * direction.row,
+        col: currentPosition.col + i * direction.col,
+      };
+      if (!isInsideBoard(nextPosition)) {
         break;
       }
-      legalIds.push(`${nextRow}-${nextCol}`);
+      legalIds.push(positionToString(nextPosition));
     }
   });
 
@@ -163,10 +232,12 @@ function getKingMoves(board: Board, selectedSquare: Square): LegalMoves {
   ];
 
   directions.forEach((direction) => {
-    const nextRow = currentPosition.rowNum + direction.row;
-    const nextCol = currentPosition.colNum + direction.col;
-    if (isInsideBoard(nextRow, nextCol)) {
-      legalIds.push(`${nextRow}-${nextCol}`);
+    const nextPosition = {
+      row: currentPosition.row + direction.row,
+      col: currentPosition.col + direction.col,
+    };
+    if (isInsideBoard(nextPosition)) {
+      legalIds.push(positionToString(nextPosition));
     }
   });
 
