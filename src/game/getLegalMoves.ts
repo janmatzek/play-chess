@@ -4,6 +4,8 @@ type LegalMoves = string[];
 type getMovesFunction = (board: Board, selectedSquare: Square) => LegalMoves;
 
 // TODO: one "isSuareLegal" function to check that square is valid
+// TODO: Square with King is always illegal
+// TODO: king cannot go on "unsafe" squares
 
 function isInsideBoard(position: Position): boolean {
   if (position.row < 0) {

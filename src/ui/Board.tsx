@@ -1,33 +1,74 @@
 import type { Square, Board } from "../types";
 import { SquareComponent } from "./Square";
+import type { SquareProps } from "./Square";
 import React, { useMemo } from "react";
 import { getLegalMoves } from "../game/getLegalMoves";
 
 type BoardProps = {
   board: Board;
+  setBoard: React.Dispatch<React.SetStateAction<Board>>;
   selectedSquare: Square | null;
   setSelectedSquare: React.Dispatch<React.SetStateAction<Square | null>>;
 };
 
-export function BoardComponent(props: BoardProps) {
+export function BoardComponent(boardProps: BoardProps) {
   const legalMoves = useMemo(() => {
-    return getLegalMoves(props.board, props.selectedSquare);
-  }, [props.selectedSquare]);
+    return getLegalMoves(boardProps.board, boardProps.selectedSquare);
+  }, [boardProps.selectedSquare]);
+
+  function selectSquare(squareProps: SquareProps) {
+    if (squareProps.isSelected) {
+      boardProps.setSelectedSquare(null);
+    } else {
+      boardProps.setSelectedSquare(squareProps.square);
+    }
+  }
+
+  function movePiece(squareProps: SquareProps) {
+    if (!boardProps.selectedSquare) {
+      throw new Error(
+        "Attempting to move a piece without selected square is illegal",
+      );
+    }
+
+    // Create a new object with the board array
+    const newBoard = structuredClone(boardProps.board);
+
+    const originPosition = boardProps.selectedSquare.position;
+    const destinationPosition = squareProps.square.position;
+    const piece = newBoard[originPosition.row][originPosition.col].piece;
+
+    // Remove the piece from the origin square
+    newBoard[originPosition.row][originPosition.col].piece = null;
+
+    // Move piece to destination square
+    // TODO: handle Pawn reaching the oposite end of the board
+    newBoard[destinationPosition.row][destinationPosition.col].piece = piece;
+
+    // Set state of the new board, unselect origin square
+    boardProps.setBoard(newBoard);
+    boardProps.setSelectedSquare(null);
+  }
+
   return (
     <>
       <div className="grid grid-cols-8 w-fit">
-        {[...props.board].reverse().map((row, rowIndex) =>
+        {[...boardProps.board].reverse().map((row, rowIndex) =>
           row.map((square, colIndex) => {
             const squareId = `${square.position.row}-${square.position.col}`;
+            const isLegal = legalMoves.includes(squareId);
+            const onClickAction = isLegal ? movePiece : selectSquare;
             return (
               <SquareComponent
                 square={square}
                 isSelected={
-                  props.selectedSquare?.position.row === square.position.row &&
-                  props.selectedSquare?.position.col === square.position.col
+                  boardProps.selectedSquare?.position.row ===
+                    square.position.row &&
+                  boardProps.selectedSquare?.position.col ===
+                    square.position.col
                 }
-                isLegal={legalMoves.includes(squareId)}
-                setSelectedSquare={props.setSelectedSquare}
+                isLegal={isLegal}
+                onClickAction={onClickAction}
                 key={`${rowIndex}-${colIndex}`}
               ></SquareComponent>
             );

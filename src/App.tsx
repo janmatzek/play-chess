@@ -12,6 +12,7 @@ function App() {
         <div>
           <BoardComponent
             board={board}
+            setBoard={setBoard}
             selectedSquare={selectedSqaure}
             setSelectedSquare={setSelectedSquare}
           ></BoardComponent>

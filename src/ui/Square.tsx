@@ -1,20 +1,12 @@
 import type { Square } from "../types";
 import { PieceComponent } from "./Pieces";
 
-type SquareProps = {
+export type SquareProps = {
   square: Square;
   isSelected: boolean;
   isLegal: boolean;
-  setSelectedSquare: React.Dispatch<React.SetStateAction<Square | null>>;
+  onClickAction: (squareProps: SquareProps) => void;
 };
-
-function handleSquareClick(squareProps: SquareProps) {
-  if (squareProps.isSelected) {
-    squareProps.setSelectedSquare(null);
-  } else {
-    squareProps.setSelectedSquare(squareProps.square);
-  }
-}
 
 export function SquareComponent(props: SquareProps) {
   const backgroundColor =
@@ -33,7 +25,7 @@ export function SquareComponent(props: SquareProps) {
   return (
     <>
       {/* TODO: responsive square size */}
-      <div className={squareCss} onClick={() => handleSquareClick(props)}>
+      <div className={squareCss} onClick={() => props.onClickAction(props)}>
         {props.isLegal && (
           <div className="absolute w-2 h-2 bg-gray-400 rounded-full opacity-60"></div>
         )}
