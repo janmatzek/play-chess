@@ -3,7 +3,7 @@ import type { Piece, Board, Square, PieceType, Position } from "../types";
 type LegalMoves = string[];
 type getMovesFunction = (board: Board, selectedSquare: Square) => LegalMoves;
 
-// TODO: piece collisions
+// TODO: one "isSuareLegal" function to check that square is valid
 
 function isInsideBoard(position: Position): boolean {
   if (position.row < 0) {
@@ -26,20 +26,9 @@ function positionToString(position: Position) {
   return `${position.row}-${position.col}`;
 }
 
-function hasPiece(board: Board, position: Position): boolean {
-  if (!isInsideBoard(position)) {
-    throw new Error("`hasPiece` evalulated position must be inside the board");
-  }
-  const square = board[position.row][position.col];
-  if (square.piece) {
-    return true;
-  }
-  return false;
-}
-
 function getPiece(board: Board, position: Position): Piece | null {
   if (!isInsideBoard(position)) {
-    throw new Error("`getPiece` evalulated position must be inside the board");
+    return null;
   }
   return board[position.row][position.col].piece;
 }
@@ -62,7 +51,9 @@ function getPawnMoves(board: Board, selectedSquare: Square): LegalMoves {
     row: currentPosition.row + step,
     col: currentPosition.col,
   };
-  if (isInsideBoard(nextStepPosition) && !hasPiece(board, nextStepPosition)) {
+
+  const pieceOnNextSquare = getPiece(board, nextStepPosition);
+  if (isInsideBoard(nextStepPosition) && !pieceOnNextSquare) {
     legalIds.push(positionToString(nextStepPosition));
   }
 
@@ -73,7 +64,8 @@ function getPawnMoves(board: Board, selectedSquare: Square): LegalMoves {
       row: currentPosition.row + 2 * step,
       col: currentPosition.col,
     };
-    if (!hasPiece(board, nextStepPosition) && !hasPiece(board, jumpPosition)) {
+    const pieceOnJumpSquare = getPiece(board, nextStepPosition);
+    if (!pieceOnNextSquare && !pieceOnJumpSquare) {
       legalIds.push(positionToString(jumpPosition));
     }
   }
@@ -91,8 +83,7 @@ function getPawnMoves(board: Board, selectedSquare: Square): LegalMoves {
     };
     if (!isInsideBoard(daigonalPosition)) return;
 
-    const diagonalPiece =
-      board[daigonalPosition.row][daigonalPosition.col].piece;
+    const diagonalPiece = getPiece(board, daigonalPosition);
 
     if (!diagonalPiece) return;
     if (diagonalPiece.color === pawnColor) return;
@@ -169,7 +160,15 @@ function getKnighMoves(board: Board, selectedSquare: Square): LegalMoves {
         col: currentPosition.col + pattern.col,
       };
       if (isInsideBoard(nextPosition)) {
-        return positionToString(nextPosition);
+        const piece = getPiece(board, nextPosition);
+        if (!piece) {
+          // If there is no piece on the square, it is legal
+          return positionToString(nextPosition);
+        }
+        if (piece.color !== selectedSquare.piece?.color) {
+          // Square with a piece of another color is also legal
+          return positionToString(nextPosition);
+        }
       }
     })
     .filter((val) => {
@@ -204,7 +203,22 @@ function getBishopMoves(board: Board, selectedSquare: Square): LegalMoves {
       if (!isInsideBoard(nextPosition)) {
         break;
       }
-      legalIds.push(positionToString(nextPosition));
+      const piece = getPiece(board, nextPosition);
+
+      if (!piece) {
+        // If there is no piece, square is legal. Go to next in the same direction
+        legalIds.push(positionToString(nextPosition));
+        continue;
+      }
+
+      if (piece.color !== selectedSquare.piece?.color) {
+        // Square with enemy piece is legal, but bishop cannot go further in this direction
+        legalIds.push(positionToString(nextPosition));
+        break;
+      } else {
+        // Piece of same color means the path is blocked
+        break;
+      }
     }
   });
 
@@ -212,7 +226,7 @@ function getBishopMoves(board: Board, selectedSquare: Square): LegalMoves {
 }
 
 function getKingMoves(board: Board, selectedSquare: Square): LegalMoves {
-  if (!selectedSquare.piece) {
+  if (selectedSquare.piece === null) {
     return [];
   }
 
@@ -237,7 +251,15 @@ function getKingMoves(board: Board, selectedSquare: Square): LegalMoves {
       col: currentPosition.col + direction.col,
     };
     if (isInsideBoard(nextPosition)) {
-      legalIds.push(positionToString(nextPosition));
+      const piece = getPiece(board, nextPosition);
+      if (!piece) {
+        // No piece means legal move
+        legalIds.push(positionToString(nextPosition));
+      }
+      if (piece?.color !== selectedSquare.piece?.color) {
+        // Square with enemy piece is legal
+        legalIds.push(positionToString(nextPosition));
+      }
     }
   });
 
