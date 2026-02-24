@@ -11,6 +11,9 @@ type BoardProps = {
   setSelectedSquare: React.Dispatch<React.SetStateAction<Square | null>>;
 };
 
+// TODO: handle `check` game state
+// TODO: store previous board state -> for en passant and rolling back illegal move
+// TODO: set player color - allow control over those pieces only
 export function BoardComponent(boardProps: BoardProps) {
   const legalMoves = useMemo(() => {
     return getLegalMoves(boardProps.board, boardProps.selectedSquare);

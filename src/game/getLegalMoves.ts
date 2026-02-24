@@ -10,7 +10,6 @@ import type {
 type LegalMoves = string[];
 type getMovesFunction = (board: Board, selectedSquare: Square) => LegalMoves;
 
-// TODO: Square with King is always illegal
 // TODO: king cannot go on "unsafe" squares
 
 function isInsideBoard(position: Position): boolean {
